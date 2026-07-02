@@ -20,9 +20,14 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI(title="SpendSense API")
 
 # Allow React frontend to talk to the backend
+frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+        frontend_url,
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -189,12 +194,11 @@ def get_insights(
     if not transactions:
         return {"insights": "Add some transactions first to get AI insights."}
 
-    # Build a summary for the LLM
     summary = []
     for t in transactions:
         summary.append(
             f"{t.date} | {t.transaction_type.upper()} | "
-            f"{t.category.name} | ₹{t.amount} | {t.description or 'No description'}"
+            f"{t.category.name} | Rs.{t.amount} | {t.description or 'No description'}"
         )
 
     prompt = f"""You are a personal finance advisor. Analyse the following transaction 
